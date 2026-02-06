@@ -1,0 +1,9 @@
+PopulationFreq:
+  threshold: 0.001
+  weight: 1
+
+ClinVarPathogenic:
+  weight: 2
+
+TherapeuticEvidence:
+  weight: 3
