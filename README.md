@@ -1,11 +1,7 @@
 # Clinical Somatic Variant Interpretation Pipeline
-
 Automated somatic variant interpretation workflow that ingests **annotated VCF files**, applies **clinical evidence rules (AMP/ASCO/CAP)**, scores each variant, and outputs a **tiered JSON/TSV report**.
 
-This workflow is loosely inspired by **Arti: Clinical Somatic Variant Annotation & Interpretation Tool**. :contentReference[oaicite:1]{index=1}
-
 ## Overview
-
 1. **Input:** Pre-annotated VCF (e.g., VEP, ANNOVAR)
 2. **Parsing:** Transform annotated fields to structured table
 3. **Evidence Scoring:** Evaluate each variant against AMP criteria
@@ -13,14 +9,12 @@ This workflow is loosely inspired by **Arti: Clinical Somatic Variant Annotation
 5. **Output:** JSON + TSV clinical variant reports
 
 ## Requirements
-
 - Docker (or Singularity)
 - Nextflow
 - Python 3.10+
 - Python packages from `requirements.txt`
 
 ## Quickstart (CLI)
-
 ```bash
 ./scripts/run_interpretation.sh \
   --vcf example_data/sample1.vep.vcf.gz \
