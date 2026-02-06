@@ -1,0 +1,36 @@
+{
+  "sample_id": "string",
+  "tumor_type": "string",
+  "pipeline_version": "string",
+  "reference_genome": "GRCh38",
+  "variants": [
+    {
+      "variant_id": "chr:pos:ref:alt",
+      "gene": "TP53",
+      "transcript": "NM_000546.6",
+      "protein_change": "p.R175H",
+      "variant_type": "Missense",
+      "allele_frequency": 0.12,
+      "cosmic": {
+        "cosmic_id": "COSM10660",
+        "occurrences": 124
+      },
+      "clinvar": {
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed_by_expert_panel"
+      },
+      "oncokb": {
+        "oncogenic": true,
+        "therapy_level": "Level 1",
+        "drugs": ["APR-246"]
+      },
+      "civic": {
+        "evidence_level": "A",
+        "clinical_significance": "Sensitivity",
+        "drugs": ["APR-246"]
+      },
+      "amp_classification": "Tier I",
+      "interpretation": "Clinically actionable TP53 hotspot mutation with FDA-approved therapy evidence."
+    }
+  ]
+}
