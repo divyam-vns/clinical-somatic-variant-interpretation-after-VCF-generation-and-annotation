@@ -60,3 +60,25 @@ python scripts/generate_report.py \
   --scored scored_variants.tsv \
   --template resources/template/report_template.json \
   --out $OUT
+```
+## Testing
+
+- Use PyTest to ensure:
+- VEP parsing correctness
+- Clinical evidence scoring correctness
+- Report format matches JSON schema
+- Add tests under ```tests/.```
+
+## Dependencies (requirements.txt)
+```
+pysam
+PyVCF
+pandas
+pyyaml
+pytest
+
+```
+## Notes & References
+- This pipeline assumes input VCFs are already annotated with variant effect predictors (VEP/ANNOVAR) and population/clinical annotations (e.g., gnomAD, ClinVar).
+- AMP/ASCO/CAP 2017 somatic variant interpretation framework provides key criteria for scoring and tiering.
+- This repository structure is intentionally modular for easy extension to incorporate databases like CIViC, OncoKB, and clinical trial evidence.
