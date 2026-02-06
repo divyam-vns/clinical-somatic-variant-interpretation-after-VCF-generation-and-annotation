@@ -1,0 +1,47 @@
+clinical-somatic-interpretation/
+│
+├── workflows/
+│   ├── interpretation_workflow.nf          # Nextflow workflow definition
+│   └── config/                             # Config templates
+│       ├── nextflow.config
+│       └── profiles/
+│           └── docker.config
+│
+├── scripts/
+│   ├── run_interpretation.sh               # CLI wrapper
+│   ├── parse_vep_to_table.py               # Parse VEP/ANNOVAR annotated VCF
+│   ├── evidence_scoring.py                 # AMP criteria scoring engine
+│   ├── generate_report.py                  # JSON/TSV output formatter
+│   └── utils.py                            # Common helper functions
+│
+├── resources/
+└── dbs/
+    ├── download_vep.sh
+    ├── download_clinvar.sh
+    ├── download_cosmic.sh
+    ├── download_all.sh
+    └── README.md
+├── resources/
+│   ├── amp_guidelines.yaml                 # AMP clinical rules & weights
+│   ├── dbs/
+│   │   ├── clinvar_latest.vcf.gz
+│   │   ├── cosmic_v95.vcf.gz
+│   │   └── cancerhotspots.bed
+│   └── template/
+│       └── report_template.json
+│
+├── example_data/
+│   ├── sample1.vep.vcf.gz                  # Pre-annotated VCF input
+│   └── sample2.vep.vcf.gz
+│
+├── tests/
+│   ├── test_parse_vep.py
+│   └── test_evidence_scoring.py
+│
+├── .github/
+│   └── workflows/ci.yml                    # Optional CI tests
+│
+├── README.md                               # Repo overview
+├── CONTRIBUTING.md                         # Contribution guidelines
+├── LICENSE                                 # MIT
+└── requirements.txt                        # Python dependencies
