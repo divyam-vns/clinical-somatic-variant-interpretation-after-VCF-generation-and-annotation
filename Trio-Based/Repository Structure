@@ -1,0 +1,28 @@
+variant-interpretation-pipeline/
+├── README.md
+├── config/
+│   ├── reference.yaml
+│   ├── thresholds.yaml
+│   └── acmg_rules.yaml
+├── input/
+│   ├── trio.vcf.gz
+│   ├── trio.vcf.gz.tbi
+│   ├── trio.ped
+│   ├── proband.bam
+│   ├── father.bam
+│   └── mother.bam
+├── annotation/
+│   └── run_vep.sh
+├── inheritance/
+│   └── trio_filter.sh
+├── bam_review/
+│   ├── bam_qc.sh
+│   ├── igv_batch_generator.py
+│   └── run_igv.sh
+├── acmg/
+│   ├── acmg_scoring.py
+│   └── acmg_manual_checklist.md
+├── reporting/
+│   ├── generate_variant_table.py
+│   └── report_template.md
+└── logs/
