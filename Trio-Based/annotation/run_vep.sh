@@ -13,3 +13,5 @@ vep \
   --af_gnomad \
   --everything \
   --fork 4
+
+# Automation ends here for annotation
