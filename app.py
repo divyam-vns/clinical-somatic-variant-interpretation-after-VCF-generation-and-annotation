@@ -2,27 +2,35 @@
 import streamlit as st
 import pandas as pd
 import subprocess
-import json
 from pathlib import Path
 
+# ----------------------------
+# App Config
+# ----------------------------
 st.set_page_config(
     page_title="Clinical Somatic Variant Interpreter",
     layout="wide"
 )
 
-st.title("🧬 Clinical Somatic Variant Interpretation")
+st.title("🧬 Clinical Somatic Variant Interpretation Pipeline")
 
 st.markdown("""
-Automated AMP/ASCO/CAP-inspired somatic variant interpretation workflow.
+This app performs **AMP/ASCO/CAP-inspired somatic variant interpretation**:
 
-Upload an annotated VCF and generate:
-- Clinical evidence scoring
-- Somatic tier classification
-- Downloadable reports
+- VCF parsing (VEP/ANN-style annotations)
+- Evidence-based scoring
+- Clinical tier classification
+- Downloadable structured reports
 """)
 
+# ----------------------------
+# Create required folders
+# ----------------------------
 Path("tmp").mkdir(exist_ok=True)
 
+# ----------------------------
+# Sidebar config
+# ----------------------------
 st.sidebar.header("Configuration")
 
 cancer_type = st.sidebar.selectbox(
@@ -30,122 +38,126 @@ cancer_type = st.sidebar.selectbox(
     ["lung", "breast", "colon", "melanoma"]
 )
 
+# ----------------------------
+# Inputs
+# ----------------------------
 uploaded_file = st.file_uploader(
-    "Upload Annotated VCF",
+    "Upload Annotated VCF (optional)",
     type=["vcf"]
 )
 
-demo_button = st.button("Run Demo Example")
+run_demo = st.button("🚀 Run Demo Example (EGFR / TP53 / KRAS)")
 
 input_vcf = None
 
+# ----------------------------
+# Handle input source
+# ----------------------------
 if uploaded_file:
-
     input_vcf = f"tmp/{uploaded_file.name}"
 
     with open(input_vcf, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
-elif demo_button:
-
+elif run_demo:
     input_vcf = "example_data/demo.vep.vcf"
 
+# ----------------------------
+# Pipeline Execution
+# ----------------------------
 if input_vcf:
 
-    if st.button("Run Clinical Interpretation") or demo_button:
+    st.info(f"Processing: {input_vcf}")
 
-        with st.spinner("Running pipeline..."):
+    # Step 1: Parse VCF
+    subprocess.run([
+        "python",
+        "scripts/parse_vep_to_table.py",
+        "--input",
+        input_vcf,
+        "--output",
+        "tmp/variants_table.tsv"
+    ], check=True)
 
-            subprocess.run([
-                "python",
-                "scripts/parse_vep_to_table.py",
-                "--input",
-                input_vcf,
-                "--output",
-                "tmp/variants_table.tsv"
-            ], check=True)
+    # Step 2: Evidence Scoring
+    subprocess.run([
+        "python",
+        "scripts/evidence_scoring.py",
+        "--table",
+        "tmp/variants_table.tsv",
+        "--cancer-type",
+        cancer_type,
+        "--rules",
+        "resources/amp_guidelines.yaml",
+        "--out",
+        "tmp/scored_variants.tsv"
+    ], check=True)
 
-            subprocess.run([
-                "python",
-                "scripts/evidence_scoring.py",
-                "--table",
-                "tmp/variants_table.tsv",
-                "--cancer-type",
-                cancer_type,
-                "--rules",
-                "resources/amp_guidelines.yaml",
-                "--out",
-                "tmp/scored_variants.tsv"
-            ], check=True)
+    # ----------------------------
+    # Load results
+    # ----------------------------
+    df = pd.read_csv("tmp/scored_variants.tsv", sep="\t")
 
-        scored = pd.read_csv(
-            "tmp/scored_variants.tsv",
-            sep="\t"
-        )
+    st.success("Analysis Complete 🚀")
 
-        st.success("Interpretation Complete")
+    # ----------------------------
+    # Metrics
+    # ----------------------------
+    col1, col2, col3 = st.columns(3)
 
-        col1, col2, col3 = st.columns(3)
+    col1.metric("Total Variants", len(df))
+    col2.metric("Tier I Variants", (df["tier"] == "Tier I").sum())
+    col3.metric("Tier III Variants", (df["tier"] == "Tier III").sum())
 
-        col1.metric(
-            "Total Variants",
-            len(scored)
-        )
+    # ----------------------------
+    # Table view
+    # ----------------------------
+    st.subheader("🧬 Clinical Variant Table")
 
-        col2.metric(
-            "Tier I Variants",
-            (scored["tier"] == "Tier I").sum()
-        )
+    st.dataframe(df, use_container_width=True)
 
-        col3.metric(
-            "Tier III Variants",
-            (scored["tier"] == "Tier III").sum()
-        )
+    # ----------------------------
+    # Tier distribution
+    # ----------------------------
+    st.subheader("📊 Tier Distribution")
 
-        st.subheader("Clinical Variant Interpretation")
+    st.bar_chart(df["tier"].value_counts())
 
-        st.dataframe(
-            scored,
-            use_container_width=True
-        )
+    # ----------------------------
+    # Gene-level interpretation
+    # ----------------------------
+    st.subheader("🔬 Clinical Interpretation Summary")
 
-        st.subheader("Tier Distribution")
+    for _, row in df.iterrows():
 
-        tier_counts = scored["tier"].value_counts()
+        gene = row["effects"].split("|")[0] if "|" in row["effects"] else row["effects"]
 
-        st.bar_chart(tier_counts)
+        st.markdown(f"""
+        ### {gene}
+        - **Tier:** {row['tier']}
+        - **Score:** {row['score']}
+        - **Clinical Significance:** {row['clin_sign']}
+        - **Evidence:** {row['evidence']}
+        """)
 
-        st.subheader("Clinical Interpretation Summary")
+    # ----------------------------
+    # Downloads
+    # ----------------------------
+    st.subheader("⬇️ Download Reports")
 
-        for _, row in scored.iterrows():
+    st.download_button(
+        "Download TSV",
+        df.to_csv(index=False, sep="\t"),
+        file_name="clinical_report.tsv",
+        mime="text/tab-separated-values"
+    )
 
-            gene = row["effects"].split("|")[0]
+    st.download_button(
+        "Download JSON",
+        df.to_json(orient="records", indent=2),
+        file_name="clinical_report.json",
+        mime="application/json"
+    )
 
-            st.markdown(
-                f"""
-                ### {gene}
-                - Tier: **{row['tier']}**
-                - Score: **{row['score']}**
-                - Clinical Significance: **{row['clin_sign']}**
-                - Evidence: **{row['evidence']}**
-                """
-            )
-
-        json_report = scored.to_json(
-            orient="records",
-            indent=2
-        )
-
-        st.download_button(
-            "Download JSON Report",
-            json_report,
-            file_name="clinical_report.json",
-            mime="application/json"
-        )
-
-        st.download_button(
-            "Download TSV Report",
-            scored.to_csv(sep="\t", index=False),
-            file_name="clinical_report.tsv",
-            mime="text/tab-separated-values"
-        )
+else:
+    st.warning("Upload a VCF file or run the demo to start analysis.")
