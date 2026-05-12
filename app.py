@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import subprocess
 from pathlib import Path
+import sys
 
 # ----------------------------
 # App Config
@@ -15,23 +16,33 @@ st.set_page_config(
 st.title("🧬 Clinical Somatic Variant Interpretation Pipeline")
 
 st.markdown("""
-This app performs **AMP/ASCO/CAP-inspired somatic variant interpretation**:
+AMP/ASCO/CAP-inspired somatic variant interpretation system.
 
-- VCF parsing (VEP/ANN-style annotations)
+Features:
+- VCF parsing (VEP/ANN style)
 - Evidence-based scoring
 - Clinical tier classification
-- Downloadable structured reports
+- Downloadable reports
 """)
 
 # ----------------------------
-# Create required folders
+# Paths (CRITICAL FIX for Streamlit Cloud)
 # ----------------------------
-Path("tmp").mkdir(exist_ok=True)
+BASE_DIR = Path(__file__).parent
+
+INPUT_VCF = BASE_DIR / "example_data" / "demo.vep.vcf"
+RULES_FILE = BASE_DIR / "resources" / "amp_guidelines.yaml"
+TMP_DIR = BASE_DIR / "tmp"
+
+TMP_DIR.mkdir(exist_ok=True)
+
+TABLE_PATH = TMP_DIR / "variants_table.tsv"
+SCORED_PATH = TMP_DIR / "scored_variants.tsv"
 
 # ----------------------------
-# Sidebar config
+# Sidebar
 # ----------------------------
-st.sidebar.header("Configuration")
+st.sidebar.header("Settings")
 
 cancer_type = st.sidebar.selectbox(
     "Cancer Type",
@@ -39,7 +50,7 @@ cancer_type = st.sidebar.selectbox(
 )
 
 # ----------------------------
-# Inputs
+# Input options
 # ----------------------------
 uploaded_file = st.file_uploader(
     "Upload Annotated VCF (optional)",
@@ -48,55 +59,70 @@ uploaded_file = st.file_uploader(
 
 run_demo = st.button("🚀 Run Demo Example (EGFR / TP53 / KRAS)")
 
+# ----------------------------
+# Helper function (SAFE subprocess)
+# ----------------------------
+def run_cmd(cmd):
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        st.error("Pipeline failed ❌")
+        st.code(result.stderr)
+        st.stop()
+
+    return result.stdout
+
+# ----------------------------
+# Select input
+# ----------------------------
 input_vcf = None
 
-# ----------------------------
-# Handle input source
-# ----------------------------
 if uploaded_file:
-    input_vcf = f"tmp/{uploaded_file.name}"
-
+    input_vcf = TMP_DIR / uploaded_file.name
     with open(input_vcf, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
 elif run_demo:
-    input_vcf = "example_data/demo.vep.vcf"
+    input_vcf = INPUT_VCF
 
 # ----------------------------
-# Pipeline Execution
+# Run pipeline
 # ----------------------------
 if input_vcf:
 
     st.info(f"Processing: {input_vcf}")
 
-    # Step 1: Parse VCF
-    subprocess.run([
-        "python",
-        "scripts/parse_vep_to_table.py",
+    # STEP 1: Parse VCF
+    run_cmd([
+        sys.executable,
+        str(BASE_DIR / "scripts" / "parse_vep_to_table.py"),
         "--input",
-        input_vcf,
+        str(input_vcf),
         "--output",
-        "tmp/variants_table.tsv"
-    ], check=True)
+        str(TABLE_PATH)
+    ])
 
-    # Step 2: Evidence Scoring
-    subprocess.run([
-        "python",
-        "scripts/evidence_scoring.py",
+    # STEP 2: Evidence scoring
+    run_cmd([
+        sys.executable,
+        str(BASE_DIR / "scripts" / "evidence_scoring.py"),
         "--table",
-        "tmp/variants_table.tsv",
+        str(TABLE_PATH),
         "--cancer-type",
         cancer_type,
         "--rules",
-        "resources/amp_guidelines.yaml",
+        str(RULES_FILE),
         "--out",
-        "tmp/scored_variants.tsv"
-    ], check=True)
+        str(SCORED_PATH)
+    ])
 
-    # ----------------------------
     # Load results
-    # ----------------------------
-    df = pd.read_csv("tmp/scored_variants.tsv", sep="\t")
+    df = pd.read_csv(SCORED_PATH, sep="\t")
 
     st.success("Analysis Complete 🚀")
 
@@ -106,58 +132,54 @@ if input_vcf:
     col1, col2, col3 = st.columns(3)
 
     col1.metric("Total Variants", len(df))
-    col2.metric("Tier I Variants", (df["tier"] == "Tier I").sum())
-    col3.metric("Tier III Variants", (df["tier"] == "Tier III").sum())
+    col2.metric("Tier I", (df["tier"] == "Tier I").sum())
+    col3.metric("Tier III", (df["tier"] == "Tier III").sum())
 
     # ----------------------------
-    # Table view
+    # Table
     # ----------------------------
-    st.subheader("🧬 Clinical Variant Table")
-
+    st.subheader("Variant Interpretation Table")
     st.dataframe(df, use_container_width=True)
 
     # ----------------------------
-    # Tier distribution
+    # Chart
     # ----------------------------
-    st.subheader("📊 Tier Distribution")
-
+    st.subheader("Tier Distribution")
     st.bar_chart(df["tier"].value_counts())
 
     # ----------------------------
-    # Gene-level interpretation
+    # Interpretation
     # ----------------------------
-    st.subheader("🔬 Clinical Interpretation Summary")
+    st.subheader("Clinical Summary")
 
     for _, row in df.iterrows():
 
         gene = row["effects"].split("|")[0] if "|" in row["effects"] else row["effects"]
 
         st.markdown(f"""
-        ### {gene}
-        - **Tier:** {row['tier']}
-        - **Score:** {row['score']}
-        - **Clinical Significance:** {row['clin_sign']}
-        - **Evidence:** {row['evidence']}
-        """)
+### {gene}
+- **Tier:** {row['tier']}
+- **Score:** {row['score']}
+- **Clinical Significance:** {row['clin_sign']}
+- **Evidence:** {row['evidence']}
+""")
 
     # ----------------------------
     # Downloads
     # ----------------------------
-    st.subheader("⬇️ Download Reports")
-
     st.download_button(
-        "Download TSV",
+        "⬇️ Download TSV",
         df.to_csv(index=False, sep="\t"),
         file_name="clinical_report.tsv",
         mime="text/tab-separated-values"
     )
 
     st.download_button(
-        "Download JSON",
+        "⬇️ Download JSON",
         df.to_json(orient="records", indent=2),
         file_name="clinical_report.json",
         mime="application/json"
     )
 
 else:
-    st.warning("Upload a VCF file or run the demo to start analysis.")
+    st.warning("Upload a VCF or run demo to start analysis")
