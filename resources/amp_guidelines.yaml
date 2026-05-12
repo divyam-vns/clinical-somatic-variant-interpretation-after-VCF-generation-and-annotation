@@ -1,0 +1,25 @@
+
+PopulationFreq:
+  threshold: 0.01
+  weight: 1
+
+ClinVarPathogenic:
+  weight: 5
+
+EGFR_Lung:
+  gene: EGFR
+  cancer: lung
+  weight: 10
+  tier: I
+
+KRAS_Lung:
+  gene: KRAS
+  cancer: lung
+  weight: 6
+  tier: II
+
+TP53_Generic:
+  gene: TP53
+  cancer: any
+  weight: 3
+  tier: III

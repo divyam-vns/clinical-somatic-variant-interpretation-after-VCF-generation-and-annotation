@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##INFO=<ID=ANN,Number=.,Type=String,Description="Annotation">
+##INFO=<ID=CLIN_SIG,Number=1,Type=String,Description="Clinical significance">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+7	140453136	.	A	T	.	PASS	ANN=EGFR|missense_variant|MODERATE|EGFR|ENSG00000146648|transcript|ENST00000275493|protein_coding|21/28|c.2573T>G|p.L858R;CLIN_SIG=Pathogenic
+17	7673803	.	C	T	.	PASS	ANN=TP53|missense_variant|MODERATE|TP53|ENSG00000141510|transcript|ENST00000269305|protein_coding|5/11|c.524G>A|p.R175H;CLIN_SIG=Likely_pathogenic
+12	25398284	.	C	T	.	PASS	ANN=KRAS|missense_variant|MODERATE|KRAS|ENSG00000133703|transcript|ENST00000256078|protein_coding|2/5|c.35G>A|p.G12D;CLIN_SIG=Pathogenic

@@ -1,0 +1,4 @@
+chrom	pos	ref	alt	effects	clin_sign	score	evidence	tier
+7	140453136	A	T	EGFR|missense_variant|MODERATE|EGFR|ENSG00000146648|transcript|ENST00000275493|protein_coding|21/28|c.2573T>G|p.L858R	Pathogenic	15	ClinVarPathogenic;EGFR_Lung	Tier I
+17	7673803	C	T	TP53|missense_variant|MODERATE|TP53|ENSG00000141510|transcript|ENST00000269305|protein_coding|5/11|c.524G>A|p.R175H	Likely_pathogenic	3	TP53_Generic	Tier III
+12	25398284	C	T	KRAS|missense_variant|MODERATE|KRAS|ENSG00000133703|transcript|ENST00000256078|protein_coding|2/5|c.35G>A|p.G12D	Pathogenic	11	ClinVarPathogenic;KRAS_Lung	Tier I
